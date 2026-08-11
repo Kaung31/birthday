@@ -193,8 +193,8 @@
     <audio id="birthdayMusic" src="ginny-song.mp3" preload="auto" loop></audio>
 
     <!-- Music Toggle Button (Fixed Top Right) -->
-    <button id="musicToggleBtn" onclick="toggleMusic()" class="fixed top-4 right-4 z-[9999] w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center text-xl shadow-[0_0_15px_rgba(253,224,71,0.5)] border-2 border-red-900 transition-transform active:scale-90">
-        🔈
+    <button id="musicToggleBtn" onclick="toggleMusic()" class="fixed top-4 right-4 z-[9999] px-4 py-2 bg-yellow-400 rounded-full flex items-center justify-center text-sm font-bold text-red-900 shadow-[0_0_15px_rgba(253,224,71,0.5)] border-2 border-red-900 transition-transform active:scale-95">
+        🎵 Play Birthday Song
     </button>
 
     <div class="snap-container" id="mainContainer">
@@ -321,11 +321,14 @@
         function toggleMusic() {
             if (musicPlayer.paused) {
                 musicPlayer.play().then(() => {
-                    musicToggleBtn.innerText = '🔊';
-                }).catch(error => console.log("Manual play failed:", error));
+                    musicToggleBtn.innerHTML = '⏸️ Pause Song';
+                }).catch(error => {
+                    console.log("Manual play failed:", error);
+                    alert("Music couldn't load. Ensure your phone isn't on silent, or try checking if the 'ginny-song.mp3' file is corrupted!");
+                });
             } else {
                 musicPlayer.pause();
-                musicToggleBtn.innerText = '🔈';
+                musicToggleBtn.innerHTML = '🎵 Play Birthday Song';
             }
         }
 
@@ -337,9 +340,9 @@
                 if (playPromise !== undefined) {
                     playPromise.then(() => {
                         // If auto-play worked, change the button icon to playing
-                        musicToggleBtn.innerText = '🔊';
+                        musicToggleBtn.innerHTML = '⏸️ Pause Song';
                     }).catch(error => {
-                        console.log("Auto-play prevented by browser. User must click the speaker button.");
+                        console.log("Auto-play prevented by browser.");
                     });
                 }
             } catch (err) {
