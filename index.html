@@ -285,7 +285,7 @@
             const maxX = window.innerWidth - madBtn.offsetWidth - 20;
             const maxY = window.innerHeight - madBtn.offsetHeight - 20;
             
-            // Generate random positions (keeping it somewhat centered/visible)
+            // Generate random positions
             const randomX = Math.max(10, Math.floor(Math.random() * maxX));
             const randomY = Math.max(10, Math.floor(Math.random() * maxY));
             
@@ -295,36 +295,47 @@
             madBtn.style.transform = 'none'; // reset translation
         }
 
-        // Add events for both mouse hover and touch screens
         madBtn.addEventListener('mouseover', moveButton);
         madBtn.addEventListener('touchstart', moveButton, {passive: false});
 
-        // 2. Accept Apology Logic
+        // 2. Accept Apology Logic (UPDATED & BULLETPROOFED)
         let audioStarted = false;
-        function acceptApology() {
+        
+        async function acceptApology() {
+            // Hide the mad button instantly
+            madBtn.style.display = 'none';
+
             // Unlock scrolling
             const container = document.getElementById('mainContainer');
             container.style.overflowY = 'auto';
             
-            // Start audio if not started
-            if (!audioStarted) {
-                startAudio();
-                audioStarted = true;
+            // Trigger Confetti safely
+            try {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#ef4444', '#fde047', '#ffffff'] // Red, Gold, White
+                });
+            } catch (error) {
+                console.log("Confetti skipped");
             }
 
-            // Confetti
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-                colors: ['#ef4444', '#fde047', '#ffffff'] // Red, Gold, White
-            });
+            // Small timeout allows the browser to register the scroll unlock before moving
+            setTimeout(() => {
+                document.getElementById('sec2').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
 
-            // Smooth scroll to next section
-            document.getElementById('sec2').scrollIntoView({ behavior: 'smooth' });
-            
-            // Hide the mad button just in case
-            madBtn.style.display = 'none';
+            // Attempt to start audio safely
+            if (!audioStarted) {
+                try {
+                    await Tone.start(); // Required by modern browsers
+                    startAudio();
+                    audioStarted = true;
+                } catch (error) {
+                    console.log("Audio was blocked by the browser, but the site will continue working.", error);
+                }
+            }
         }
 
         // 3. Cake Logic
@@ -332,7 +343,6 @@
         let candlesOut = 0;
         const totalCandles = 3;
 
-        // Generate candles
         for(let i=0; i<totalCandles; i++) {
             const wrapper = document.createElement('div');
             wrapper.className = 'candle-wrapper';
@@ -340,7 +350,6 @@
                 <div class="flame" id="flame-${i}"></div>
                 <div class="candle"></div>
             `;
-            // Touch/click event for mobile and desktop
             wrapper.addEventListener('click', () => blowCandle(i));
             candlesContainer.appendChild(wrapper);
         }
@@ -351,8 +360,6 @@
                 flame.classList.add('out');
                 candlesOut++;
                 
-                // Small puff of smoke effect could go here
-                
                 if (candlesOut === totalCandles) {
                     setTimeout(() => {
                         triggerMegaConfetti();
@@ -362,30 +369,31 @@
         }
 
         function triggerMegaConfetti() {
-            var duration = 3 * 1000;
-            var animationEnd = Date.now() + duration;
-            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100, colors: ['#fde047', '#ef4444'] };
+            try {
+                var duration = 3 * 1000;
+                var animationEnd = Date.now() + duration;
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100, colors: ['#fde047', '#ef4444'] };
 
-            var interval = setInterval(function() {
-                var timeLeft = animationEnd - Date.now();
+                var interval = setInterval(function() {
+                    var timeLeft = animationEnd - Date.now();
 
-                if (timeLeft <= 0) {
-                    return clearInterval(interval);
-                }
+                    if (timeLeft <= 0) {
+                        return clearInterval(interval);
+                    }
 
-                var particleCount = 50 * (timeLeft / duration);
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
-                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
-            }, 250);
+                    var particleCount = 50 * (timeLeft / duration);
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                    confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+                }, 250);
+            } catch(e) {}
         }
 
         function randomInRange(min, max) {
             return Math.random() * (max - min) + min;
         }
 
-        // 4. Tone.js Audio (Asian Pentatonic vibe)
+        // 4. Tone.js Audio 
         function startAudio() {
-            // Reverb to make it sound spacious and elegant
             const reverb = new Tone.Reverb({
                 decay: 4,
                 wet: 0.5
@@ -397,27 +405,21 @@
                 resonance: 0.9
             }).connect(reverb);
             
-            synth.volume.value = -12; // Keep it background level
+            synth.volume.value = -12; 
 
-            // Pentatonic scale notes (Guzheng vibe)
             const notes = ["C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5"];
             let step = 0;
 
             Tone.Transport.scheduleRepeat((time) => {
-                // Play a random note from the pentatonic scale occasionally
                 if (Math.random() > 0.3) {
                     const randomNote = notes[Math.floor(Math.random() * notes.length)];
                     synth.triggerAttackRelease(randomNote, "8n", time);
                 }
-                
-                // Arpeggio pattern
                 const patternNote = notes[step % 5]; 
                 synth.triggerAttackRelease(patternNote, "16n", time + "+0.25");
-                
                 step++;
             }, "4n");
 
-            Tone.start();
             Tone.Transport.start();
         }
     </script>
