@@ -188,7 +188,10 @@
     </style>
 </head>
 <body>
+
+    <!-- iOS / Mac Audio Player Setup -->
     <audio id="birthdayMusic" src="ginny-song.mp3" preload="auto" loop></audio>
+
     <div class="snap-container" id="mainContainer">
         
         <!-- SECTION 1: Apology -->
@@ -200,7 +203,9 @@
                 <p class="mb-8 italic text-sm text-yellow-200">Will you forgive me and accept this apology?</p>
                 
                 <div class="flex flex-col items-center gap-4">
+                    <!-- Accept Button -->
                     <button class="btn-gold text-xl" onclick="acceptApology()">Yes, I forgive you! ❤️</button>
+                    
                     <!-- Container to handle bounds for the moving button -->
                     <div style="height: 60px; width: 100%; position: relative;">
                         <button class="btn-mad absolute left-1/2 -translate-x-1/2" id="madBtn">No, I'm Mad! 😤</button>
@@ -259,13 +264,13 @@
                 <h2 class="text-3xl font-bold mb-10 text-yellow-400 chinese-text">美好的回忆 (Memories)</h2>
                 
                 <div class="photo-card">
-                    <img src="IMG_9648.jpeg" alt="Memory 1" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
+                    <img src="IMG_9648.jpeg" alt="Memory 1">
                 </div>
                 <div class="photo-card">
-                    <img src="IMG_7784.jpeg" alt="Memory 2" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
+                    <img src="IMG_7784.jpeg" alt="Memory 2">
                 </div>
                 <div class="photo-card">
-                    <img src="IMG_8981.png" alt="Memory 3" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
+                    <img src="IMG_8981.png" alt="Memory 3">
                 </div>
                 
                 <p class="mt-8 text-xl italic text-yellow-500">Happy Birthday! 🎉</p>
@@ -279,36 +284,46 @@
         const madBtn = document.getElementById('madBtn');
         
         function moveButton(e) {
-            e.preventDefault(); // Prevent accidental clicks on touch
+            e.preventDefault(); 
             
-            // Padding prevents the button from touching the exact edges of the screen
-            const padding = 20; 
+            const padding = 30; 
             
-            // Calculate maximum boundaries based on the current window size
+            // Generate boundaries
             const maxX = window.innerWidth - madBtn.offsetWidth - padding;
             const maxY = window.innerHeight - madBtn.offsetHeight - padding;
             
-            // Generate random positions ensuring it stays within the visible screen
+            // Random positions on screen
             const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
             const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
             
-            // Apply fixed positioning to break out of the flex container and roam the screen
             madBtn.style.position = 'fixed';
             madBtn.style.left = `${randomX}px`;
             madBtn.style.top = `${randomY}px`;
-            madBtn.style.transform = 'none'; // reset any Tailwind translation
-            madBtn.style.zIndex = '9999'; // Force it to always stay on top
+            madBtn.style.transform = 'none'; 
+            madBtn.style.zIndex = '9999'; 
         }
 
-        // Trigger run-away when hovered or tapped
+        // Trigger on hover or tap
         madBtn.addEventListener('mouseover', moveButton);
         madBtn.addEventListener('touchstart', moveButton, {passive: false});
 
-        // 2. MP3 Audio Setup
-        // 3. Accept Apology Logic
-        let audioStarted = false;
+        // 2. Accept Apology Logic (Synchronous for Apple iOS/Mac strict rules)
+        function acceptApology() {
+            // PLAY MUSIC IMMEDIATELY (Must be the very first thing to bypass Apple blocks)
+            try {
+                const musicPlayer = document.getElementById('birthdayMusic');
+                musicPlayer.volume = 0.5; 
+                let playPromise = musicPlayer.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        console.log("Audio play prevented by browser:", error);
+                    });
+                }
+            } catch (err) {
+                console.log("Audio error", err);
+            }
 
-        async function acceptApology() {
             // Hide the mad button instantly
             madBtn.style.display = 'none';
 
@@ -316,70 +331,30 @@
             const container = document.getElementById('mainContainer');
             container.style.overflowY = 'auto';
             
-            // Trigger Confetti safely
+            // Trigger Confetti
             try {
                 confetti({
                     particleCount: 150,
                     spread: 80,
                     origin: { y: 0.6 },
-                    colors: ['#ef4444', '#fde047', '#ffffff'], // Red, Gold, White
+                    colors: ['#ef4444', '#fde047', '#ffffff'], 
                     zIndex: 9999 
                 });
-            } catch (error) {
-                console.log("Confetti skipped");
-            }
+            } catch (error) {}
 
-            // Scroll down to the wish automatically
+            // Scroll down to the wish automatically after a tiny delay
             setTimeout(() => {
-                container.scrollTo({
-                    top: document.getElementById('sec2').offsetTop,
-                    behavior: 'smooth'
-                });
-            }, 150);
-
-            // Play the MP3 music safely using the HTML tag
-            if (!audioStarted) {
-                try {
-                    const musicPlayer = document.getElementById('birthdayMusic');
-                    musicPlayer.volume = 0.5; // 50% volume
-                    
-                    // The browser requires a "Promise" to play audio on mobile
-                    let playPromise = musicPlayer.play();
-                    
-                    if (playPromise !== undefined) {
-                        playPromise.then(_ => {
-                            // Automatic playback started!
-                            audioStarted = true;
-                        }).catch(error => {
-                            // Auto-play was prevented by the browser
-                            console.log("Audio play failed:", error);
-                        });
-                    }
-                } catch (error) {
-                    console.log("Audio logic error:", error);
+                const sec2 = document.getElementById('sec2');
+                if(container && sec2) {
+                    container.scrollTo({
+                        top: sec2.offsetTop,
+                        behavior: 'smooth'
+                    });
                 }
-            }
-        }
-            // Scroll down to the wish automatically
-            setTimeout(() => {
-                container.scrollTo({
-                    top: document.getElementById('sec2').offsetTop,
-                    behavior: 'smooth'
-                });
-            }, 150);
-
-            // Play the MP3 music safely
-            if (!audioStarted) {
-                try {
-                    bgMusic.play();
-                    audioStarted = true;
-                } catch (error) {
-                    console.log("Audio play failed:", error);
-                }
-            }
+            }, 100);
         }
 
-        // 4. Cake & Candle Logic
+        // 3. Cake & Candle Logic
         const candlesContainer = document.getElementById('candlesContainer');
         let candlesOut = 0;
         const totalCandles = 3;
