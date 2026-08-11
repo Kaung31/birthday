@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Happy 21st Birthday Ginny!</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -260,13 +259,13 @@
                 <h2 class="text-3xl font-bold mb-10 text-yellow-400 chinese-text">美好的回忆 (Memories)</h2>
                 
                 <div class="photo-card">
-                    <img src="IMG_9648.jpg" alt="Memory 1" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_9648.jpg'">
+                    <img src="IMG_9648.jpeg" alt="Memory 1" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
                 </div>
                 <div class="photo-card">
-                    <img src="IMG_7784.jpg" alt="Memory 2" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_7784.jpg'">
+                    <img src="IMG_7784.jpeg" alt="Memory 2" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
                 </div>
                 <div class="photo-card">
-                    <img src="IMG_8981.jpg" alt="Memory 3" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_8981.jpg'">
+                    <img src="IMG_8981.png" alt="Memory 3" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Image+Missing'">
                 </div>
                 
                 <p class="mt-8 text-xl italic text-yellow-500">Happy Birthday! 🎉</p>
@@ -276,32 +275,42 @@
     </div>
 
     <script>
-        // 1. Moving Button Logic (Mobile Friendly)
+        // 1. Moving "Mad" Button Logic
         const madBtn = document.getElementById('madBtn');
         
         function moveButton(e) {
             e.preventDefault(); // Prevent accidental clicks on touch
             
-            // Get viewport dimensions
-            const maxX = window.innerWidth - madBtn.offsetWidth - 20;
-            const maxY = window.innerHeight - madBtn.offsetHeight - 20;
+            // Padding prevents the button from touching the exact edges of the screen
+            const padding = 20; 
             
-            // Generate random positions
-            const randomX = Math.max(10, Math.floor(Math.random() * maxX));
-            const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+            // Calculate maximum boundaries based on the current window size
+            const maxX = window.innerWidth - madBtn.offsetWidth - padding;
+            const maxY = window.innerHeight - madBtn.offsetHeight - padding;
             
+            // Generate random positions ensuring it stays within the visible screen
+            const randomX = Math.max(padding, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(padding, Math.floor(Math.random() * maxY));
+            
+            // Apply fixed positioning to break out of the flex container and roam the screen
             madBtn.style.position = 'fixed';
             madBtn.style.left = `${randomX}px`;
             madBtn.style.top = `${randomY}px`;
-            madBtn.style.transform = 'none'; // reset translation
+            madBtn.style.transform = 'none'; // reset any Tailwind translation
+            madBtn.style.zIndex = '9999'; // Force it to always stay on top
         }
 
+        // Trigger run-away when hovered or tapped
         madBtn.addEventListener('mouseover', moveButton);
         madBtn.addEventListener('touchstart', moveButton, {passive: false});
 
-        // 2. Accept Apology Logic (UPDATED & BULLETPROOFED)
+        // 2. MP3 Audio Setup
         let audioStarted = false;
-        
+        const bgMusic = new Audio('ginny-song.mp3'); 
+        bgMusic.volume = 0.5;
+        bgMusic.loop = true;
+
+        // 3. Accept Apology Logic
         async function acceptApology() {
             // Hide the mad button instantly
             madBtn.style.display = 'none';
@@ -323,7 +332,7 @@
                 console.log("Confetti skipped");
             }
 
-            // Using scrollTo directly is much more reliable with scroll-snap containers
+            // Scroll down to the wish automatically
             setTimeout(() => {
                 container.scrollTo({
                     top: document.getElementById('sec2').offsetTop,
@@ -331,19 +340,18 @@
                 });
             }, 150);
 
-            // Attempt to start audio safely
+            // Play the MP3 music safely
             if (!audioStarted) {
                 try {
-                    await Tone.start(); // Required by modern browsers
-                    startAudio();
+                    bgMusic.play();
                     audioStarted = true;
                 } catch (error) {
-                    console.log("Audio was blocked by the browser, but the site will continue working.", error);
+                    console.log("Audio play failed:", error);
                 }
             }
         }
 
-        // 3. Cake Logic
+        // 4. Cake & Candle Logic
         const candlesContainer = document.getElementById('candlesContainer');
         let candlesOut = 0;
         const totalCandles = 3;
@@ -395,21 +403,6 @@
 
         function randomInRange(min, max) {
             return Math.random() * (max - min) + min;
-        }
-
-        // 4. Tone.js Audio (FIXED: Switched to Freeverb which does not crash synchronously)
-        // 4. Play an MP3 File
-        function startAudio() {
-            // Replace 'ginny-song.mp3' with the EXACT name of your downloaded file
-            const bgMusic = new Audio('ginny-song.mp3'); 
-            
-            // 0.5 is 50% volume. Change to 1.0 for max volume, or 0.2 for quiet background music
-            bgMusic.volume = 0.5; 
-            
-            // This makes the song loop endlessly
-            bgMusic.loop = true;  
-            
-            bgMusic.play().catch(error => console.log("Audio play failed:", error));
         }
     </script>
 </body>
