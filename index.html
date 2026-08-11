@@ -398,34 +398,18 @@
         }
 
         // 4. Tone.js Audio (FIXED: Switched to Freeverb which does not crash synchronously)
+        // 4. Play an MP3 File
         function startAudio() {
-            // Reverb requires async generation in Tone 14+, Freeverb works sync and safely!
-            const reverb = new Tone.Freeverb({
-                roomSize: 0.8,
-                dampening: 3000
-            }).toDestination();
-
-            const synth = new Tone.PolySynth(Tone.Synth, {
-                oscillator: { type: "triangle" },
-                envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
-            }).connect(reverb);
+            // Replace 'ginny-song.mp3' with the EXACT name of your downloaded file
+            const bgMusic = new Audio('ginny-song.mp3'); 
             
-            synth.volume.value = -8; 
-
-            const notes = ["C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5"];
-            let step = 0;
-
-            Tone.Transport.scheduleRepeat((time) => {
-                if (Math.random() > 0.3) {
-                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
-                    synth.triggerAttackRelease(randomNote, "8n", time);
-                }
-                const patternNote = notes[step % 5]; 
-                synth.triggerAttackRelease(patternNote, "16n", time + "+0.25");
-                step++;
-            }, "4n");
-
-            Tone.Transport.start();
+            // 0.5 is 50% volume. Change to 1.0 for max volume, or 0.2 for quiet background music
+            bgMusic.volume = 0.5; 
+            
+            // This makes the song loop endlessly
+            bgMusic.loop = true;  
+            
+            bgMusic.play().catch(error => console.log("Audio play failed:", error));
         }
     </script>
 </body>
