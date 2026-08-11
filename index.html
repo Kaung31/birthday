@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy 21st Birthday Ginny!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Playfair Display', serif;
+            background-color: #2a0808; /* Deep crimson/charcoal base */
+            color: #fde047; /* Gold text */
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Locked initially */
+        }
+        .chinese-text {
+            font-family: 'Noto Serif SC', serif;
+        }
+        .snap-container {
+            height: 100vh;
+            overflow-y: hidden; /* Changed via JS when unlocked */
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .snap-section {
+            height: 100vh;
+            width: 100vw;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            padding: 1rem;
+        }
+        
+        /* Asian Pattern Background */
+        .bg-pattern {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(#d97706 1px, transparent 1px);
+            background-size: 30px 30px;
+            opacity: 0.05;
+            z-index: 0;
+        }
+
+        .content-z { z-index: 10; text-align: center; }
+
+        /* Gold Glassmorphism Card */
+        .gold-card {
+            background: rgba(40, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(253, 224, 71, 0.3);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(253, 224, 71, 0.1);
+            padding: 2rem;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        /* Buttons */
+        .btn-gold {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #450a0a;
+            font-weight: bold;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            box-shadow: 0 4px 15px rgba(217, 119, 6, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: none;
+            outline: none;
+        }
+        .btn-gold:active { transform: scale(0.95); }
+
+        .btn-mad {
+            background: #7f1d1d;
+            color: #fca5a5;
+            border: 1px solid #ef4444;
+            padding: 0.75rem 2rem;
+            border-radius: 9999px;
+            transition: all 0.1s ease;
+            white-space: nowrap;
+        }
+
+        /* Cake & Candles */
+        .cake {
+            width: 200px;
+            height: 120px;
+            background: linear-gradient(to right, #7f1d1d, #991b1b, #7f1d1d);
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            border-bottom: 5px solid #d97706;
+            border-top: 2px solid #fde047;
+            margin-top: 100px;
+        }
+        .plate {
+            width: 260px;
+            height: 15px;
+            background: #d97706;
+            border-radius: 50%;
+            margin-top: -5px;
+            box-shadow: 0 10px 10px rgba(0,0,0,0.5);
+        }
+        .candles-container {
+            display: flex;
+            justify-content: space-around;
+            position: absolute;
+            top: -40px;
+            width: 100%;
+            padding: 0 20px;
+        }
+        .candle-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px; /* larger tap target for mobile */
+        }
+        .candle {
+            width: 12px;
+            height: 40px;
+            background: repeating-linear-gradient(45deg, #fde047, #fde047 5px, #d97706 5px, #d97706 10px);
+            border-radius: 3px;
+            position: relative;
+        }
+        .flame {
+            width: 14px;
+            height: 20px;
+            background: #fef08a;
+            border-radius: 50% 50% 20% 20%;
+            box-shadow: 0 0 15px #fef08a, 0 0 30px #f59e0b;
+            margin-bottom: 2px;
+            animation: flicker 0.1s infinite alternate;
+            transition: opacity 0.3s;
+        }
+        .flame.out { opacity: 0; box-shadow: none; animation: none; }
+
+        @keyframes flicker {
+            0% { transform: scale(1) rotate(-1deg); opacity: 1; }
+            100% { transform: scale(1.1) rotate(1deg); opacity: 0.9; }
+        }
+
+        /* Photo Gallery */
+        .photo-card {
+            background: white;
+            padding: 10px 10px 30px 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            transform: rotate(-2deg);
+            margin-bottom: 20px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .photo-card:nth-child(even) { transform: rotate(3deg); }
+        .photo-card img {
+            width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+        }
+        
+        /* Floating Lanterns */
+        .lantern {
+            position: absolute;
+            width: 40px; height: 50px;
+            background: #ef4444;
+            border-radius: 10px 10px 5px 5px;
+            box-shadow: inset 0 0 10px #fde047, 0 0 20px #ef4444;
+            animation: floatup 10s linear infinite;
+            opacity: 0.6;
+        }
+        .lantern::after {
+            content: '';
+            position: absolute; bottom: -5px; left: 15px;
+            width: 10px; height: 5px; background: #fde047;
+        }
+        @keyframes floatup {
+            0% { transform: translateY(100vh) scale(0.8); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="snap-container" id="mainContainer">
+        
+        <!-- SECTION 1: Apology -->
+        <section class="snap-section" id="sec1">
+            <div class="bg-pattern"></div>
+            <div class="content-z gold-card relative">
+                <h1 class="text-3xl font-bold mb-4 text-red-500">Wait...</h1>
+                <p class="mb-6 text-lg">I know this is late. <br>I am so sorry for the late birthday wish! 🥺</p>
+                <p class="mb-8 italic text-sm text-yellow-200">Will you forgive me and accept this apology?</p>
+                
+                <div class="flex flex-col items-center gap-4">
+                    <button class="btn-gold text-xl" onclick="acceptApology()">Yes, I forgive you! ❤️</button>
+                    <!-- Container to handle bounds for the moving button -->
+                    <div style="height: 60px; width: 100%; position: relative;">
+                        <button class="btn-mad absolute left-1/2 -translate-x-1/2" id="madBtn">No, I'm Mad! 😤</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: Main Wish -->
+        <section class="snap-section" id="sec2">
+            <div class="bg-pattern"></div>
+            <!-- Lanterns -->
+            <div class="lantern" style="left: 10%; animation-delay: 0s;"></div>
+            <div class="lantern" style="left: 80%; animation-delay: 2s; width: 30px; height: 40px;"></div>
+            <div class="lantern" style="left: 30%; animation-delay: 5s;"></div>
+
+            <div class="content-z">
+                <p class="text-xl mb-2 italic tracking-widest uppercase text-yellow-500">Happy 21st Birthday</p>
+                <h1 class="text-6xl font-bold mb-4 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]">Ginny</h1>
+                <h2 class="text-5xl chinese-text font-bold mb-8 text-red-500 drop-shadow-[0_0_10px_rgba(239,68,68,0.8)]">王靖绮</h2>
+                <div class="gold-card mx-auto mt-4 text-left p-4">
+                    <p class="text-sm leading-relaxed">May your 21st year be filled with immense joy, beautiful memories, and endless success. You deserve all the happiness in the world!</p>
+                </div>
+                <div class="mt-8 animate-bounce text-yellow-600">
+                    ↓ Scroll for cake ↓
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: The Cake -->
+        <section class="snap-section" id="sec3">
+            <div class="bg-pattern"></div>
+            <div class="content-z flex flex-col items-center">
+                <h2 class="text-3xl font-bold mb-8 text-yellow-400">Make a Wish! 🎂</h2>
+                <p class="text-sm mb-12 text-yellow-200">Tap the candles to blow them out</p>
+                
+                <div class="cake-container relative flex flex-col items-center">
+                    <div class="candles-container" id="candlesContainer">
+                        <!-- Candles generated by JS -->
+                    </div>
+                    <div class="cake flex items-center justify-center">
+                        <span class="text-yellow-400 font-bold text-2xl opacity-50">21</span>
+                    </div>
+                    <div class="plate"></div>
+                </div>
+            </div>
+            <div class="absolute bottom-10 animate-bounce text-yellow-600">
+                ↓ Scroll for memories ↓
+            </div>
+        </section>
+
+        <!-- SECTION 4: Gallery -->
+        <section class="snap-section" id="sec4" style="height: auto; min-height: 100vh; padding: 4rem 1rem;">
+            <div class="bg-pattern"></div>
+            <div class="content-z w-full flex flex-col items-center">
+                <h2 class="text-3xl font-bold mb-10 text-yellow-400 chinese-text">美好的回忆 (Memories)</h2>
+                
+                <div class="photo-card">
+                    <img src="IMG_9648.jpg" alt="Memory 1" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_9648.jpg'">
+                </div>
+                <div class="photo-card">
+                    <img src="IMG_7784.jpg" alt="Memory 2" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_7784.jpg'">
+                </div>
+                <div class="photo-card">
+                    <img src="IMG_8981.jpg" alt="Memory 3" onerror="this.src='https://via.placeholder.com/300x400/7f1d1d/fde047?text=Replace+with+IMG_8981.jpg'">
+                </div>
+                
+                <p class="mt-8 text-xl italic text-yellow-500">Happy Birthday! 🎉</p>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // 1. Moving Button Logic (Mobile Friendly)
+        const madBtn = document.getElementById('madBtn');
+        
+        function moveButton(e) {
+            e.preventDefault(); // Prevent accidental clicks on touch
+            
+            // Get viewport dimensions
+            const maxX = window.innerWidth - madBtn.offsetWidth - 20;
+            const maxY = window.innerHeight - madBtn.offsetHeight - 20;
+            
+            // Generate random positions (keeping it somewhat centered/visible)
+            const randomX = Math.max(10, Math.floor(Math.random() * maxX));
+            const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+            
+            madBtn.style.position = 'fixed';
+            madBtn.style.left = `${randomX}px`;
+            madBtn.style.top = `${randomY}px`;
+            madBtn.style.transform = 'none'; // reset translation
+        }
+
+        // Add events for both mouse hover and touch screens
+        madBtn.addEventListener('mouseover', moveButton);
+        madBtn.addEventListener('touchstart', moveButton, {passive: false});
+
+        // 2. Accept Apology Logic
+        let audioStarted = false;
+        function acceptApology() {
+            // Unlock scrolling
+            const container = document.getElementById('mainContainer');
+            container.style.overflowY = 'auto';
+            
+            // Start audio if not started
+            if (!audioStarted) {
+                startAudio();
+                audioStarted = true;
+            }
+
+            // Confetti
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ef4444', '#fde047', '#ffffff'] // Red, Gold, White
+            });
+
+            // Smooth scroll to next section
+            document.getElementById('sec2').scrollIntoView({ behavior: 'smooth' });
+            
+            // Hide the mad button just in case
+            madBtn.style.display = 'none';
+        }
+
+        // 3. Cake Logic
+        const candlesContainer = document.getElementById('candlesContainer');
+        let candlesOut = 0;
+        const totalCandles = 3;
+
+        // Generate candles
+        for(let i=0; i<totalCandles; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'candle-wrapper';
+            wrapper.innerHTML = `
+                <div class="flame" id="flame-${i}"></div>
+                <div class="candle"></div>
+            `;
+            // Touch/click event for mobile and desktop
+            wrapper.addEventListener('click', () => blowCandle(i));
+            candlesContainer.appendChild(wrapper);
+        }
+
+        function blowCandle(index) {
+            const flame = document.getElementById(`flame-${index}`);
+            if (!flame.classList.contains('out')) {
+                flame.classList.add('out');
+                candlesOut++;
+                
+                // Small puff of smoke effect could go here
+                
+                if (candlesOut === totalCandles) {
+                    setTimeout(() => {
+                        triggerMegaConfetti();
+                    }, 300);
+                }
+            }
+        }
+
+        function triggerMegaConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100, colors: ['#fde047', '#ef4444'] };
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        // 4. Tone.js Audio (Asian Pentatonic vibe)
+        function startAudio() {
+            // Reverb to make it sound spacious and elegant
+            const reverb = new Tone.Reverb({
+                decay: 4,
+                wet: 0.5
+            }).toDestination();
+
+            const synth = new Tone.PolySynth(Tone.PluckSynth, {
+                attackNoise: 1,
+                dampening: 4000,
+                resonance: 0.9
+            }).connect(reverb);
+            
+            synth.volume.value = -12; // Keep it background level
+
+            // Pentatonic scale notes (Guzheng vibe)
+            const notes = ["C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5"];
+            let step = 0;
+
+            Tone.Transport.scheduleRepeat((time) => {
+                // Play a random note from the pentatonic scale occasionally
+                if (Math.random() > 0.3) {
+                    const randomNote = notes[Math.floor(Math.random() * notes.length)];
+                    synth.triggerAttackRelease(randomNote, "8n", time);
+                }
+                
+                // Arpeggio pattern
+                const patternNote = notes[step % 5]; 
+                synth.triggerAttackRelease(patternNote, "16n", time + "+0.25");
+                
+                step++;
+            }, "4n");
+
+            Tone.start();
+            Tone.Transport.start();
+        }
+    </script>
+</body>
+</html>
