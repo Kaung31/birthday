@@ -76,6 +76,7 @@
             transition: transform 0.2s, box-shadow 0.2s;
             border: none;
             outline: none;
+            cursor: pointer;
         }
         .btn-gold:active { transform: scale(0.95); }
 
@@ -309,22 +310,26 @@
             const container = document.getElementById('mainContainer');
             container.style.overflowY = 'auto';
             
-            // Trigger Confetti safely
+            // Trigger Confetti safely with z-index to overlay on top of cards
             try {
                 confetti({
-                    particleCount: 100,
-                    spread: 70,
+                    particleCount: 150,
+                    spread: 80,
                     origin: { y: 0.6 },
-                    colors: ['#ef4444', '#fde047', '#ffffff'] // Red, Gold, White
+                    colors: ['#ef4444', '#fde047', '#ffffff'], // Red, Gold, White
+                    zIndex: 9999 
                 });
             } catch (error) {
                 console.log("Confetti skipped");
             }
 
-            // Small timeout allows the browser to register the scroll unlock before moving
+            // Using scrollTo directly is much more reliable with scroll-snap containers
             setTimeout(() => {
-                document.getElementById('sec2').scrollIntoView({ behavior: 'smooth' });
-            }, 100);
+                container.scrollTo({
+                    top: document.getElementById('sec2').offsetTop,
+                    behavior: 'smooth'
+                });
+            }, 150);
 
             // Attempt to start audio safely
             if (!audioStarted) {
@@ -372,7 +377,7 @@
             try {
                 var duration = 3 * 1000;
                 var animationEnd = Date.now() + duration;
-                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100, colors: ['#fde047', '#ef4444'] };
+                var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999, colors: ['#fde047', '#ef4444'] };
 
                 var interval = setInterval(function() {
                     var timeLeft = animationEnd - Date.now();
@@ -392,20 +397,20 @@
             return Math.random() * (max - min) + min;
         }
 
-        // 4. Tone.js Audio 
+        // 4. Tone.js Audio (FIXED: Switched to Freeverb which does not crash synchronously)
         function startAudio() {
-            const reverb = new Tone.Reverb({
-                decay: 4,
-                wet: 0.5
+            // Reverb requires async generation in Tone 14+, Freeverb works sync and safely!
+            const reverb = new Tone.Freeverb({
+                roomSize: 0.8,
+                dampening: 3000
             }).toDestination();
 
-            const synth = new Tone.PolySynth(Tone.PluckSynth, {
-                attackNoise: 1,
-                dampening: 4000,
-                resonance: 0.9
+            const synth = new Tone.PolySynth(Tone.Synth, {
+                oscillator: { type: "triangle" },
+                envelope: { attack: 0.05, decay: 0.1, sustain: 0.3, release: 1 }
             }).connect(reverb);
             
-            synth.volume.value = -12; 
+            synth.volume.value = -8; 
 
             const notes = ["C4", "D4", "E4", "G4", "A4", "C5", "D5", "E5"];
             let step = 0;
