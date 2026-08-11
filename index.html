@@ -188,7 +188,7 @@
     </style>
 </head>
 <body>
-
+    <audio id="birthdayMusic" src="ginny-song.mp3" preload="auto" loop></audio>
     <div class="snap-container" id="mainContainer">
         
         <!-- SECTION 1: Apology -->
@@ -305,12 +305,9 @@
         madBtn.addEventListener('touchstart', moveButton, {passive: false});
 
         // 2. MP3 Audio Setup
-        let audioStarted = false;
-        const bgMusic = new Audio('ginny-song.mp3'); 
-        bgMusic.volume = 0.5;
-        bgMusic.loop = true;
-
         // 3. Accept Apology Logic
+        let audioStarted = false;
+
         async function acceptApology() {
             // Hide the mad button instantly
             madBtn.style.display = 'none';
@@ -319,7 +316,7 @@
             const container = document.getElementById('mainContainer');
             container.style.overflowY = 'auto';
             
-            // Trigger Confetti safely with z-index to overlay on top of cards
+            // Trigger Confetti safely
             try {
                 confetti({
                     particleCount: 150,
@@ -332,6 +329,37 @@
                 console.log("Confetti skipped");
             }
 
+            // Scroll down to the wish automatically
+            setTimeout(() => {
+                container.scrollTo({
+                    top: document.getElementById('sec2').offsetTop,
+                    behavior: 'smooth'
+                });
+            }, 150);
+
+            // Play the MP3 music safely using the HTML tag
+            if (!audioStarted) {
+                try {
+                    const musicPlayer = document.getElementById('birthdayMusic');
+                    musicPlayer.volume = 0.5; // 50% volume
+                    
+                    // The browser requires a "Promise" to play audio on mobile
+                    let playPromise = musicPlayer.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(_ => {
+                            // Automatic playback started!
+                            audioStarted = true;
+                        }).catch(error => {
+                            // Auto-play was prevented by the browser
+                            console.log("Audio play failed:", error);
+                        });
+                    }
+                } catch (error) {
+                    console.log("Audio logic error:", error);
+                }
+            }
+        }
             // Scroll down to the wish automatically
             setTimeout(() => {
                 container.scrollTo({
